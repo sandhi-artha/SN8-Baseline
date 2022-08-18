@@ -36,9 +36,9 @@ def parse_args():
     parser.add_argument("--n_epochs",
                          type=int,
                          default=50)
-    parser.add_argument("--gpu",
+    parser.add_argument("--cpu",
                         type=int,
-                        default=0)
+                        default=1)
     args = parser.parse_args()
     return args
     
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     initial_lr = args.lr
     batch_size = args.batch_size
     n_epochs = args.n_epochs
-    gpu = args.gpu
+    cpu = args.cpu
 
     now = datetime.now() 
     date_total = str(now.strftime("%d-%m-%Y-%H-%M"))
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     road_loss_weight = 0.5
     building_loss_weight = 0.5
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
+    # os.environ['CUDA_VISIBLE_DEVICES'] = str(cpu)
 
     SEED=12
     torch.manual_seed(SEED)
@@ -121,7 +121,9 @@ if __name__ == "__main__":
     else:
         model = models[model_name](num_classes=[1, 8], num_channels=3)
     
-    model.cuda()
+    # model.cuda()
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=initial_lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.5)
     bceloss = nn.BCEWithLogitsLoss()
@@ -143,13 +145,16 @@ if __name__ == "__main__":
 
             preimg, postimg, building, road, roadspeed, flood = data
 
-            preimg = preimg.cuda().float()
-            roadspeed = roadspeed.cuda().float()
-            building = building.cuda().float()
+            # preimg = preimg.cuda().float()
+            # roadspeed = roadspeed.cuda().float()
+            # building = building.cuda().float()
+            preimg = preimg.to(device).float()
+            roadspeed = roadspeed.to(device).float()
+            building = building.to(device).float()
 
             building_pred, road_pred = model(preimg)
             bce_l = bceloss(building_pred, building)
-            y_pred = F.sigmoid(road_pred)
+            y_pred = torch.sigmoid(road_pred)
 
             focal_l = focal(y_pred, roadspeed)
             dice_soft_l = soft_dice_loss(y_pred, roadspeed)
@@ -189,13 +194,16 @@ if __name__ == "__main__":
         with torch.no_grad():
             for i, data in enumerate(val_dataloader):
                 preimg, postimg, building, road, roadspeed, flood = data
-                preimg = preimg.cuda().float()
-                roadspeed = roadspeed.cuda().float()
-                building = building.cuda().float()
+                # preimg = preimg.cuda().float()
+                # roadspeed = roadspeed.cuda().float()
+                # building = building.cuda().float()
+                preimg = preimg.to(device).float()
+                roadspeed = roadspeed.to(device).float()
+                building = building.to(device).float()
 
                 building_pred, road_pred = model(preimg)
                 bce_l = bceloss(building_pred, building)
-                y_pred = F.sigmoid(road_pred)
+                y_pred = torch.sigmoid(road_pred)
 
                 focal_l = focal(y_pred, roadspeed)
                 dice_soft_l = soft_dice_loss(y_pred, roadspeed)
