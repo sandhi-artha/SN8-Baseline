@@ -60,6 +60,10 @@ def parse_args():
                         nargs="+",
                         type=str,
                         help="directory names of the AOIs (e.g. Germany_Training_Public, Louisiana-East_Training_Public)")
+    parser.add_argument("--kaggle_dir",
+                        required=True,
+                        type=str,
+                        help="/kaggle/working")
     args = parser.parse_args()
     return args
 
@@ -271,7 +275,7 @@ if __name__ == "__main__":
     args = parse_args()
     root_dir = args.root_dir
     aoi_dirs = args.aoi_dirs
-    kaggle_dir = args.out_dir  # '/kaggle/working'
+    kaggle_dir = args.kaggle_dir  # '/kaggle/working'
 
     geojsons = []
     pre_images = []
