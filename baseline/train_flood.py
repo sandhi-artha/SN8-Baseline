@@ -38,7 +38,7 @@ def parse_args():
     parser.add_argument("--n_epochs",
                          type=int,
                          default=50)
-    parser.add_argument("--gpu",
+    parser.add_argument("--cpu",
                         type=int,
                         default=0)
     
@@ -82,12 +82,12 @@ if __name__ ==  "__main__":
     initial_lr = args.lr
     batch_size = args.batch_size
     n_epochs = args.n_epochs
-    gpu = args.gpu
+    cpu = args.cpu
     
     now = datetime.now() 
     date_total = str(now.strftime("%d-%m-%Y-%H-%M"))
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
+    # os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
 
 
     soft_dice_loss_weight = 0.25
@@ -135,7 +135,9 @@ if __name__ ==  "__main__":
     else:
         model = models[model_name](num_classes=num_classes, num_channels=3)
 
-    model.cuda()
+    # model.cuda()
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=initial_lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.5)
     
@@ -161,15 +163,18 @@ if __name__ ==  "__main__":
 
             preimg, postimg, building, road, roadspeed, flood = data
 
-            preimg = preimg.cuda().float()
-            postimg = postimg.cuda().float()
+            # preimg = preimg.cuda().float()
+            # postimg = postimg.cuda().float()
+            preimg = preimg.to(device).float()
+            postimg = postimg.to(device).float()
 
             flood = flood.numpy()
             flood_shape = flood.shape
             flood = np.append(np.zeros(shape=(flood_shape[0],1,flood_shape[2],flood_shape[3])), flood, axis=1)
             flood = np.argmax(flood, axis = 1) # this is needed for cross-entropy loss. 
 
-            flood = torch.tensor(flood).cuda()
+            # flood = torch.tensor(flood).cuda()
+            flood = torch.tensor(flood).to(device)
 
             # flood_pred = model(combinedimg) # this is for resnet34 with stacked preimg+postimg input
             flood_pred = model(preimg, postimg) # this is for siamese resnet34 with stacked preimg+postimg input
@@ -208,8 +213,10 @@ if __name__ ==  "__main__":
 
                 #combinedimg = torch.cat((preimg, postimg), dim=1)
                 #combinedimg = combinedimg.cuda().float()
-                preimg = preimg.cuda().float()
-                postimg = postimg.cuda().float()
+                # preimg = preimg.cuda().float()
+                # postimg = postimg.cuda().float()
+                preimg = preimg.to(device).float()
+                postimg = postimg.to(device).float()
 
                 flood = flood.numpy()
                 flood_shape = flood.shape
@@ -222,7 +229,8 @@ if __name__ ==  "__main__":
                 #temp[:,5] = np.max(flood[:,2:], axis=1)
                 #flood = temp
 
-                flood = torch.tensor(flood).cuda()
+                # flood = torch.tensor(flood).cuda()
+                flood = torch.tensor(flood).to(device)
 
                 # flood_pred = model(combinedimg) # this is for resnet34 with stacked preimg+postimg input
                 flood_pred = model(preimg, postimg) # this is for siamese resnet34 with stacked preimg+postimg input
