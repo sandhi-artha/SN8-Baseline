@@ -21,6 +21,10 @@ def parse_args():
                         nargs="+",
                         type=str,
                         help="directory names of the AOIs (e.g. Germany_Training_Public, Louisiana-East_Training_Public)")
+    parser.add_argument("--kaggle_dir",
+                        required=True,
+                        type=str,
+                        help="/kaggle/working")
     args = parser.parse_args()
     return args
 
@@ -281,7 +285,7 @@ if __name__ == "__main__":
     args = parse_args()
     root_dir = args.root_dir
     aois = args.aoi_dirs
-    kaggle_dir = args.kaggle
+    kaggle_dir = args.kaggle_dir
 
     geojsons = []
     pre_images = []
@@ -290,8 +294,8 @@ if __name__ == "__main__":
     road_labels = []
     for i in aois:
         anno = glob.glob(os.path.join(root_dir, i, "annotations", "*.geojson"))
-        bldgs = glob.glob(os.path.join(root_dir, i, "annotations", "prepped_cleaned", "buildings*.shp"))
-        roads = glob.glob(os.path.join(root_dir, i, "annotations", "prepped_cleaned", "roads*.shp"))
+        bldgs = glob.glob(os.path.join(kaggle_dir, "prepped_cleaned", "buildings*.shp"))
+        roads = glob.glob(os.path.join(kaggle_dir, "prepped_cleaned", "roads*.shp"))
         pre = glob.glob(os.path.join(root_dir, i, "PRE-event", "*.tif"))
 
         an, bu, ro, preims = match_im_label(anno, bldgs, roads, pre)
@@ -306,8 +310,8 @@ if __name__ == "__main__":
         pre_image = pre_images[i]
         buildings_shapefile = build_labels[i]
         roads_shapefile = road_labels[i]
-        out_dir_root = os.path.dirname(geojsons[i])
-        output_image_directory = os.path.join(out_dir_root, "masks")
+        # out_dir_root = os.path.dirname(geojsons[i])
+        output_image_directory = os.path.join(kaggle_dir, "masks")
         if not os.path.exists(output_image_directory):
             os.mkdir(output_image_directory)
             os.chmod(output_image_directory, 0o777)
