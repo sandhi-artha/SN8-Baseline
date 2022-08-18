@@ -271,6 +271,7 @@ if __name__ == "__main__":
     args = parse_args()
     root_dir = args.root_dir
     aoi_dirs = args.aoi_dirs
+    kaggle_dir = args.out_dir  # '/kaggle/working'
 
     geojsons = []
     pre_images = []
@@ -297,7 +298,7 @@ if __name__ == "__main__":
         post_images.extend(postims)
 
     for i in geojsons:
-        out_dir = os.path.join(os.path.dirname(i), "prepped_cleaned")
+        out_dir = os.path.join(kaggle_dir, "prepped_cleaned")
         if not os.path.exists(out_dir):
             os.mkdir(out_dir)
             os.chmod(out_dir, 0o777)
