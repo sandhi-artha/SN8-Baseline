@@ -281,6 +281,7 @@ if __name__ == "__main__":
     args = parse_args()
     root_dir = args.root_dir
     aois = args.aoi_dirs
+    kaggle_dir = args.kaggle
 
     geojsons = []
     pre_images = []
