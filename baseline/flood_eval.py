@@ -36,7 +36,7 @@ def parse_args():
                          type=str,
                          required=False,
                          default=None)
-    parser.add_argument("--gpu",
+    parser.add_argument("--cpu",
                          type=int,
                          required=False,
                          default=0)
@@ -107,12 +107,12 @@ if __name__ == "__main__":
     model_name = args.model_name
     save_fig_dir = args.save_fig_dir
     save_preds_dir = args.save_preds_dir
-    gpu = args.gpu
+    cpu = args.cpu
 
     num_classes = 5
     img_size = (1300,1300)
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
+    # os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
 
     val_dataset = SN8Dataset(in_csv,
                             data_to_load=["preimg","postimg","flood"],
@@ -124,8 +124,10 @@ if __name__ == "__main__":
     else:
         model = models[model_name](num_classes=num_classes, num_channels=3)
 
-    model.load_state_dict(torch.load(model_path))
-    model.cuda()
+    model.load_state_dict(torch.load(model_path), strict=False)  # strict 0 needed to resolve error
+    # model.cuda()
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
 
     #criterion = nn.BCEWithLogitsLoss()
 
@@ -155,15 +157,18 @@ if __name__ == "__main__":
             print("evaluating: ", i, os.path.basename(current_image_filename))
             preimg, postimg, building, road, roadspeed, flood = data
 
-            preimg = preimg.cuda().float() #siamese
-            postimg = postimg.cuda().float() #siamese
+            # preimg = preimg.cuda().float() #siamese
+            # postimg = postimg.cuda().float() #siamese
+            preimg = preimg.to(device).float() #siamese
+            postimg = postimg.to(device).float() #siamese
             
             flood = flood.numpy()
             flood_shape = flood.shape
             flood = np.append(np.zeros(shape=(flood_shape[0],1,flood_shape[2],flood_shape[3])), flood, axis=1)
             flood = np.argmax(flood, axis = 1)
             
-            flood = torch.tensor(flood).cuda()
+            # flood = torch.tensor(flood).cuda()
+            flood = torch.tensor(flood).to(device)
 
             flood_pred = model(preimg, postimg) # siamese resnet34 with stacked preimg+postimg input
             flood_pred = torch.nn.functional.softmax(flood_pred, dim=1).cpu().numpy()[0] # (5, H, W)
