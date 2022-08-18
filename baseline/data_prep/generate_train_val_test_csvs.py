@@ -52,7 +52,8 @@ def gather_images_masks(image_dir):
 
 def make_train_val_csvs(image_dirs,
                         out_csv_basename,
-                        val_percent=0.15):
+                        val_percent=0.15,
+                        kaggle_dir='/kaggle/working'):
     geojsons = []
     pre_images = []
     post_images = []
@@ -62,10 +63,10 @@ def make_train_val_csvs(image_dirs,
     speed_labels = []
     for d in image_dirs:
         anno = glob.glob(os.path.join(d, "annotations", "*.geojson"))
-        bldgs = glob.glob(os.path.join(d, "annotations", "masks", "building*.tif"))
-        roads = glob.glob(os.path.join(d, "annotations", "masks", "road*.tif"))
-        flood = glob.glob(os.path.join(d, "annotations", "masks", "flood*.tif"))
-        roadspeed = glob.glob(os.path.join(d, "annotations", "masks", "roadspeed*.tif"))
+        bldgs = glob.glob(os.path.join(kaggle_dir, "masks", "building*.tif"))
+        roads = glob.glob(os.path.join(kaggle_dir, "masks", "road*.tif"))
+        flood = glob.glob(os.path.join(kaggle_dir, "masks", "flood*.tif"))
+        roadspeed = glob.glob(os.path.join(kaggle_dir, "masks", "roadspeed*.tif"))
         pre = glob.glob(os.path.join(d, "PRE-event", "*.tif"))
         post = glob.glob(os.path.join(d, "POST-event", "*.tif"))
         an, bu, ro, fl, rs, preims, postims = match_im_label(anno, bldgs, roads, flood, roadspeed, pre, post)
@@ -147,6 +148,10 @@ def parse_args():
                         type=float,
                         required=True,
                         default=0.15)
+    parser.add_argument("--kaggle_dir",
+                        required=True,
+                        type=str,
+                        help="/kaggle/working")
     args = parser.parse_args()
     return args
 
@@ -158,7 +163,8 @@ if __name__ == "__main__":
     out_csv_basename = args.out_csv_basename
     val_percent = args.val_percent
     out_dir = args.out_dir
+    kaggle_dir = args.kaggle_dir
 
     ##### train val split as random
     image_dirs = [os.path.join(root_dir, n) for n in aois]
-    make_train_val_csvs(image_dirs, os.path.join(out_dir, out_csv_basename), val_percent=val_percent)
+    make_train_val_csvs(image_dirs, os.path.join(out_dir, out_csv_basename), val_percent=val_percent, kaggle_dir=kaggle_dir)
