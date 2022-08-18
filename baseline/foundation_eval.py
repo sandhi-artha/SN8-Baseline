@@ -34,7 +34,7 @@ def parse_args():
                          type=str,
                          required=False,
                          default=None)
-    parser.add_argument("--gpu",
+    parser.add_argument("--cpu",
                          type=int,
                          required=False,
                          default=0)
@@ -130,12 +130,12 @@ if __name__ == "__main__":
     in_csv = args.in_csv
     save_fig_dir = args.save_fig_dir
     save_preds_dir = args.save_preds_dir
-    gpu = args.gpu
+    cpu = args.cpu
     model_name = args.model_name
 
     img_size = (1300,1300)
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
+    # os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
 
     if model_name == "unet":
         model = UNet(3, [1,8], bilinear=True)
@@ -146,8 +146,10 @@ if __name__ == "__main__":
                         img_size=img_size)
 
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=1)
-    model.load_state_dict(torch.load(model_path))
-    model.cuda()
+    model.load_state_dict(torch.load(model_path), strict=False)  # strict 0 needed to resolve error
+    # model.cuda()
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
 
     #criterion = nn.BCEWithLogitsLoss()
 
@@ -172,10 +174,13 @@ if __name__ == "__main__":
             current_image_filename = val_dataset.get_image_filename(i)
             print("evaluating: ", i, os.path.basename(current_image_filename))
             preimg, postimg, building, road, roadspeed, flood = data
-            preimg = preimg.cuda().float()
+            # preimg = preimg.cuda().float()
+            preimg = preimg.to(device).float()
             
-            roadspeed = roadspeed.cuda().float()
-            building = building.cuda().float()
+            # roadspeed = roadspeed.cuda().float()
+            # building = building.cuda().float()
+            roadspeed = roadspeed.to(device).float()
+            building = building.to(device).float()
             building_pred, roadspeed_pred = model(preimg)
             
             roadspeed_pred = torch.sigmoid(roadspeed_pred)
