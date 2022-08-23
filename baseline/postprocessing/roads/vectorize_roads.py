@@ -78,7 +78,8 @@ def parse_args():
                         help='only valid if out_dir and im_dir are specified.',
                        action='store_true')
     parser.add_argument('--verbose',
-                       action='store_true')
+                       type=int,
+                       default=False)
     args = parser.parse_args()
     return args
     
