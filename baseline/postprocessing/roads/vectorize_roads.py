@@ -77,6 +77,8 @@ def parse_args():
     parser.add_argument('--write_skeletons',
                         help='only valid if out_dir and im_dir are specified.',
                        action='store_true')
+    parser.add_argument('--verbose',
+                       action='store_true')
     args = parser.parse_args()
     return args
     
@@ -806,6 +808,7 @@ if __name__ == "__main__":
     write_graphs = args.write_graphs
     write_csvs = args.write_csvs
     write_skeletons = args.write_skeletons
+    verbose = args.verbose
 
     if not os.path.exists(im_dir):
         images = [img_loc]
