@@ -861,7 +861,7 @@ if __name__ == "__main__":
                                     skeleton_band=7,
                                     kernel_blur=27,
                                     min_background_frac=0.2,
-                                    verbose=True)
+                                    verbose=verbose)
 
         min_spur_length_m = 10
         ds = gdal.Open(img_loc)
